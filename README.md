@@ -14,7 +14,7 @@
 |------|------|
 | 文面入力 | ユーザーが催促・リマインド文面を入力 |
 | AI添削 | 入力文面をAIが添削し、改善版を生成 |
-| 改善ポイント表示 | 添削のポイントを箇条書きで解説 |
+| 改善ポイント表示 | 添削のポイントをMarkdown形式の箇条書きで解説 |
 | コピー機能 | 添削結果をワンクリックでクリップボードにコピー |
 
 ### トーン設定
@@ -85,15 +85,19 @@ Warning:             #FDF0DC / #FDF6ED (クリーム系)
 | TypeScript | 型安全な開発 |
 | Vite | ビルドツール・開発サーバー |
 | Tailwind CSS | スタイリング |
+| react-markdown | Markdownレンダリング |
+| react-ga4 | Google Analytics 4 統合 |
 | pnpm | パッケージマネージャー |
-| Gemini 2.0 API | AI文面添削エンジン |
+| Gemini 2.5 Flash API | AI文面添削エンジン |
 | Vercel | デプロイ・ホスティング |
 
 ## API仕様
 
-### Gemini 2.0 API連携
+### Gemini 2.5 API連携
 
-**エンドポイント**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`
+**モデル**: `gemini-2.5-flash` (高速・汎用・推奨)
+
+**エンドポイント**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`
 
 ### リクエスト
 
@@ -122,8 +126,15 @@ JSON形式で返却：
 ```json
 {
   "revised": "添削後の文面",
-  "feedback": "改善ポイントの説明（箇条書き）"
+  "feedback": "改善ポイントの説明（Markdown形式の箇条書き）"
 }
+```
+
+**feedbackフィールド例**:
+```markdown
+- **クッション言葉の追加**: 「恐れ入りますが」を冒頭に追加し、柔らかい印象に
+- **具体的な期限の明示**: 「○月○日まで」と具体的な日付を記載
+- **感謝の表現**: 文末に「ご協力いただけますと幸いです」を追加
 ```
 
 ## ファイル構成
@@ -154,10 +165,15 @@ pnpm install
 `.env` ファイルを作成：
 
 ```env
+# 必須: Gemini API Key
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
+
+# 任意: Google Analytics Measurement ID
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
-Gemini API Keyは [Google AI Studio](https://aistudio.google.com/app/apikey) から取得できます。
+- **Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey) から取得
+- **Google Analytics ID**: [Google Analytics](https://analytics.google.com/) で取得（任意）
 
 ### 3. 開発サーバー起動
 
@@ -186,6 +202,30 @@ vercel --prod
 
 または、GitHubリポジトリと連携して自動デプロイも可能です。
 
+## Google Analytics 連携
+
+アプリケーションには Google Analytics 4 が統合されており、以下のイベントをトラッキングします:
+
+### トラッキングイベント
+
+| イベント | カテゴリ | アクション | ラベル | 説明 |
+|----------|----------|------------|--------|------|
+| ページビュー | - | pageview | - | アプリ訪問時 |
+| 添削成功 | Revision | revision_success | トーン種類 | 添削完了時 |
+| サンプル使用 | User | use_sample | サンプル名 | サンプル文面クリック時 |
+| トーン選択 | User | select_tone | トーン種類 | トーン変更時 |
+| テキストコピー | User | copy_text | revised_text | コピーボタンクリック時 |
+| APIエラー | Error | api_error | エラーメッセージ | API呼び出し失敗時 |
+| 添削エラー | Error | revision_error | エラーメッセージ | 添削処理エラー時 |
+
+### セットアップ方法
+
+1. [Google Analytics](https://analytics.google.com/) でプロパティを作成
+2. Measurement ID (形式: `G-XXXXXXXXXX`) を取得
+3. `.env` ファイルに `VITE_GA_MEASUREMENT_ID` を設定
+
+Google Analytics を使用しない場合は、環境変数を設定しなければトラッキングは無効化されます。
+
 ## 今後の拡張案
 
 - [ ] 添削履歴の保存機能
@@ -196,4 +236,4 @@ vercel --prod
 
 ## ライセンス
 
-MIT License# saisoku
+MIT License
